@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Rifa Digital - Sistema Completo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            background: #FEEFEF;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Botón de Admin */
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+        
+        .admin-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #d40055;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(212, 0, 85, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .admin-btn:hover {
+            background: #b8004a;
+            transform: scale(1.1);
+        }
+        
+        .admin-btn.logged-in {
+            background: #28a745;
+        }
+        
+        .admin-btn.logged-in:hover {
+            background: #218838;
+        }
+        
+        .admin-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 999;
+            display: none;
+        }
+        
+        .admin-status.visible {
+            display: block;
+        }
+        
+        header img, footer img { 
+            max-width: 720px; 
+            width: 100%;
+            height: auto; 
+            display: block; 
+        }
+        
+        .estadisticas {
+            background: white;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 300px;
+        }
+        
+        .estadisticas h3 {
+            margin-top: 0;
+            color: #d40055;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #d40055;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d40055;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .grilla {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            margin: 20px;
+            max-width: 500px;
+            width: 100%;
+            padding: 0 20px;
+        }
+        
+        .grilla button {
+            aspect-ratio: 1;
+            min-height: 40px;
+            background: #FEEFEF;
+            border: 2px solid #333;
+            outline: 2px solid pink;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .grilla button:hover:not(.vendido) { 
+            background: pink; 
+            transform: scale(1.1);
+            z-index: 1;
+        }
+        
+        .grilla button.vendido { 
+            background: rgba(229,57,53,0.7); 
+            cursor: not-allowed;
+            color: white;
+            opacity: 0.7;
+        }
+        
+        .grilla button.vendido::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: rgb(7, 7, 7);
+            font-weight: bold;
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal.visible { 
+            display: flex; 
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-content img { 
+            width: 200px; 
+            height: 200px;
+            margin: 1rem auto; 
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        
+        .modal-content h3 {
+            color: #d40055;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .modal-content button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        #confirmarVenta {
+            background: #d40055;
+            color: white;
+        }
+        
+        #confirmarVenta:hover {
+            background: #b8004a;
+            transform: translateY(-2px);
+        }
+        
+        #cerrarModal, #cancelLoginBtn {
+            background: #6c757d;
+            color: white;
+        }
+        
+        #cerrarModal:hover, #cancelLoginBtn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        #loginBtn {
+            background: #28a745;
+            color: white;
+        }
+        
+        #loginBtn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .admin-input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .admin-input:focus {
+            outline: none;
+            border-color: #d40055;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d40055;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 600px) {
+            .grilla {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .grilla button {
+                font-size: 12px;
+                min-height: 35px;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .admin-panel {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .admin-status {
+                top: 70px;
+                right: 10px;
+                font-size: 10px;
+            }
+            
+            .admin-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Panel de Administrador -->
+<div class="admin-panel">
+    <button class="admin-btn" id="adminBtn" title="Panel de Administrador">⚙️</button>
+</div>
+
+<div class="admin-status" id="adminStatus">
+    👑 Modo Administrador
+</div>
+
+<header>
+    <img src="{{ url_for('static', filename='Header.png') }}" alt="Encabezado" onerror="this.style.display='none'">
+</header>
+
+<div class="estadisticas">
+    <h3>📊 Estado de la Rifa</h3>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number" id="vendidos">0</div>
+            <div class="stat-label">Vendidos</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="disponibles">100</div>
+            <div class="stat-label">Disponibles</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="porcentaje">0%</div>
+            <div class="stat-label">Progreso</div>
+        </div>
+    </div>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Cargando números...</p>
+</div>
+
+<main>
+    <div class="grilla" id="grilla"></div>
+</main>
+
+<footer>
+    <img src="{{ url_for('static', filename='foot.png') }}" alt="Pie de página" onerror="this.style.display='none'">
+</footer>
+
+<!-- Modal QR -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="tituloQR">Número 00</h3>
+        <p>Escanea el código QR para realizar el pago</p>
+        <img id="imgQR" src="{{ url_for('static', filename='qrnequi.png') }}" alt="Código QR" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"200\" viewBox=\"0 0 200 200\"><rect width=\"200\" height=\"200\" fill=\"%23f0f0f0\"/><text x=\"100\" y=\"100\" text-anchor=\"middle\" dy=\".3em\" font-family=\"Arial\" font-size=\"16\" fill=\"%23666\"></text></svg>'">
+        
+        <div class="modal-buttons">
+            <button id="confirmarVenta" style="display: none;">✓ Confirmar Venta</button>
+            <button id="cerrarModal">✗ Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Login Admin -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <h3>🔐 Acceso Administrador</h3>
+        <p>Ingresa la contraseña de administrador:</p>
+        <input type="password" id="adminPassword" class="admin-input" placeholder="Contraseña">
+        
+        <div class="modal-buttons">
+            <button id="loginBtn">🔓 Iniciar Sesión</button>
+            <button id="cancelLoginBtn">✗ Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const TOTAL = 100;
+const grilla = document.getElementById('grilla');
+const modal = document.getElementById('modal');
+const tituloQR = document.getElementById('tituloQR');
+const imgQR = document.getElementById('imgQR');
+const confirmarBtn = document.getElementById('confirmarVenta');
+const cerrarBtn = document.getElementById('cerrarModal');
+const loading = document.getElementById('loading');
+
+// Elementos de admin
+const adminBtn = document.getElementById('adminBtn');
+const adminStatus = document.getElementById('adminStatus');
+const loginModal = document.getElementById('loginModal');
+const adminPasswordInput = document.getElementById('adminPassword');
+const loginBtn = document.getElementById('loginBtn');
+const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+
+// Elementos de estadísticas
+const vendidosEl = document.getElementById('vendidos');
+const disponiblesEl = document.getElementById('disponibles');
+const porcentajeEl = document.getElementById('porcentaje');
+
+let numeroSeleccionado = null;
+let estadoNumeros = {};
+let isAdmin = {{ 'true' if is_admin else 'false' }};
+
+// Función para mostrar alertas
+function mostrarAlerta(mensaje, tipo = 'success') {
+    // Remover alertas anteriores
+    const alertaAnterior = document.querySelector('.alert');
+    if (alertaAnterior) {
+        alertaAnterior.remove();
+    }
+    
+    const alerta = document.createElement('div');
+    alerta.className = `alert ${tipo}`;
+    alerta.textContent = mensaje;
+    
+    document.body.insertBefore(alerta, document.querySelector('main'));
+    
+    // Remover después de 5 segundos
+    setTimeout(() => {
+        if (alerta.parentNode) {
+            alerta.remove();
+        }
+    }, 5000);
+}
+
+// Función para actualizar la interfaz de administrador
+function actualizarInterfazAdmin() {
+    if (isAdmin) {
+        adminBtn.classList.add('logged-in');
+        adminBtn.innerHTML = '👑';
+        adminBtn.title = 'Cerrar Sesión Admin';
+        adminStatus.classList.add('visible');
+    } else {
+        adminBtn.classList.remove('logged-in');
+        adminBtn.innerHTML = '⚙️';
+        adminBtn.title = 'Panel de Administrador';
+        adminStatus.classList.remove('visible');
+    }
+}
+
+// Manejar click en botón de admin
+adminBtn.addEventListener('click', () => {
+    if (isAdmin) {
+        // Cerrar sesión
+        fetch('/logout', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    isAdmin = false;
+                    actualizarInterfazAdmin();
+                    mostrarAlerta('Sesión cerrada correctamente', 'success');
+                    // Ocultar botón confirmar si está visible
+                    confirmarBtn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('Error al cerrar sesión', 'error');
+            });
+    } else {
+        // Mostrar modal de login
+        loginModal.classList.add('visible');
+        adminPasswordInput.focus();
+    }
+});
+
+// Manejar login
+loginBtn.addEventListener('click', () => {
+    const password = adminPasswordInput.value.trim();
+    
+    if (!password) {
+        mostrarAlerta('Por favor ingresa la contraseña', 'error');
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Verificando...';
+    
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            isAdmin = true;
+            actualizarInterfazAdmin();
+            loginModal.classList.remove('visible');
+            adminPasswordInput.value = '';
+            mostrarAlerta('¡Bienvenido Administrador!', 'success');
+        } else {
+            mostrarAlerta(data.error || 'Contraseña incorrecta', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('Error de conexión', 'error');
+    })
+    .finally(() => {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🔓 Iniciar Sesión';
+    });
+});
+
+// Cancelar login
+cancelLoginBtn.addEventListener('click', () => {
+    loginModal.classList.remove('visible');
+    adminPasswordInput.value = '';
+});
+
+// Login con Enter
+adminPasswordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        loginBtn.click();
+    }
+});
+
+// Función para actualizar estadísticas
+function actualizarEstadisticas() {
+    const vendidos = Object.values(estadoNumeros).filter(v => v).length;
+    const disponibles = TOTAL - vendidos;
+    const porcentaje = Math.round((vendidos / TOTAL) * 100);
+    
+    vendidosEl.textContent = vendidos;
+    disponiblesEl.textContent = disponibles;
+    porcentajeEl.textContent = porcentaje + '%';
+}
+
+// Función para cargar el estado desde el servidor
+function cargarEstado() {
+    loading.style.display = 'block';
+    
+    fetch('/estado')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                estadoNumeros = data.numeros;
+                actualizarGrilla();
+                actualizarEstadisticas();
+            } else {
+                mostrarAlerta('Error al cargar el estado: ' + (data.error || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarAlerta('Error de conexión al servidor', 'error');
+        })
+        .finally(() => {
+            loading.style.display = 'none';
+        });
+}
+
+// Función para crear la grilla de botones
+function crearGrilla() {
+    grilla.innerHTML = '';
+    
+    for (let i = 0; i < TOTAL; i++) {
+        const b = document.createElement('button');
+        b.textContent = i.toString().padStart(2, '0');
+        b.dataset.num = i;
+        b.id = `numero-${i}`;
+        
+        b.addEventListener('click', () => {
+            if (b.classList.contains('vendido')) {
+                mostrarAlerta('Este número ya está vendido', 'error');
+                return;
+            }
+            
+            numeroSeleccionado = b;
+            tituloQR.textContent = `Número ${b.dataset.num.padStart(2, '0')}`;
+            
+            // Mostrar u ocultar botón de confirmar según si es admin
+            if (isAdmin) {
+                confirmarBtn.style.display = 'inline-block';
+            } else {
+                confirmarBtn.style.display = 'none';
+            }
+            
+            modal.classList.add('visible');
+        });
+        
+        grilla.appendChild(b);
+    }
+}
+
+// Función para actualizar la grilla con el estado actual
+function actualizarGrilla() {
+    for (let i = 0; i < TOTAL; i++) {
+        const boton = document.getElementById(`numero-${i}`);
+        if (boton) {
+            if (estadoNumeros[i]) {
+                boton.classList.add('vendido');
+                boton.disabled = true;
+            } else {
+                boton.classList.remove('vendido');
+                boton.disabled = false;
+            }
+        }
+    }
+}
+
+// Confirmar venta (solo admins)
+confirmarBtn.addEventListener('click', () => {
+    if (!numeroSeleccionado || !isAdmin) {
+        mostrarAlerta('Solo los administradores pueden confirmar ventas', 'error');
+        return;
+    }
+    
+    const numero = numeroSeleccionado.dataset.num;
+    confirmarBtn.disabled = true;
+    confirmarBtn.textContent = 'Procesando...';
+    
+    fetch(`/vender/${numero}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                numeroSeleccionado.classList.add('vendido');
+                numeroSeleccionado.disabled = true;
+                estadoNumeros[numero] = true;
+                actualizarEstadisticas();
+                mostrarAlerta(`¡Número ${numero.padStart(2, '0')} vendido exitosamente!`, 'success');
+            } else {
+                mostrarAlerta('Error: ' + (data.error || 'No se pudo procesar la venta'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarAlerta('Error de conexión al procesar la venta', 'error');
+        })
+        .finally(() => {
+            confirmarBtn.disabled = false;
+            confirmarBtn.textContent = '✓ Confirmar Venta';
+            numeroSeleccionado = null;
+            modal.classList.remove('visible');
+        });
+});
+
+// Cerrar modal sin vender
+cerrarBtn.addEventListener('click', () => {
+    numeroSeleccionado = null;
+    modal.classList.remove('visible');
+});
+
+// Cerrar al hacer clic fuera del modal
+modal.addEventListener('click', e => {
+    if (e.target === modal) {
+        numeroSeleccionado = null;
+        modal.classList.remove('visible');
+    }
+});
+
+loginModal.addEventListener('click', e => {
+    if (e.target === loginModal) {
+        loginModal.classList.remove('visible');
+        adminPasswordInput.value = '';
+    }
+});
+
+// Cerrar modal con la tecla Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        if (modal.classList.contains('visible')) {
+            numeroSeleccionado = null;
+            modal.classList.remove('visible');
+        }
+        if (loginModal.classList.contains('visible')) {
+            loginModal.classList.remove('visible');
+            adminPasswordInput.value = '';
+        }
+    }
+});
+
+// Actualizar estado cada 30 segundos
+setInterval(cargarEstado, 30000);
+
+// Inicializar la aplicación
+document.addEventListener('DOMContentLoaded', () => {
+    crearGrilla();
+    cargarEstado();
+    actualizarInterfazAdmin();
+});
+</script>
+
+</body>
+</html>
